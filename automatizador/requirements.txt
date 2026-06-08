@@ -1,0 +1,11 @@
+# Automatizador de Defectos - Dependencias
+# ===========================================
+
+# Dependencias principales
+tkinter                 # Interface gráfica (viene con Python)
+openai>=1.0.0           # API compatible con OpenCode Go
+python-dotenv>=1.0.0    # Variables de entorno
+
+# Dependencias de desarrollo (opcional)
+# pytest>=7.4.0
+# black>=23.0.0
