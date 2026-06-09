@@ -2,7 +2,7 @@
 # ===========================================
 
 # Dependencias principales
-tkinter                 # Interface gráfica (viene con Python)
+customtkinter>=5.2.0    # Interface gráfica moderna (tema oscuro, widgets mejorados)
 openai>=1.0.0           # API compatible con OpenCode Go
 python-dotenv>=1.0.0    # Variables de entorno
 

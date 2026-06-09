@@ -4,8 +4,18 @@ Automatizador de Defectos - Interfaz con CustomTkinter
 Aplicación de escritorio para generar reportes de defectos
 con asistencia de inteligencia artificial.
 """
-
+import os
 import customtkinter as ctk
+import tkinter as tk
+from tkinter import messagebox
+from openai import OpenAI
+from dotenv import load_dotenv       
+
+# Obtener la ruta del archivo .env en la raíz
+ruta_script = os.path.dirname(os.path.abspath(__file__))
+ruta_env = os.path.join(ruta_script, ".env")
+
+load_dotenv(dotenv_path=ruta_env)
 
 # ─────────────────────────────────────────────────────────
 # Configuración global de CustomTkinter
@@ -32,6 +42,19 @@ class AutomatizadorApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.api_key = os.getenv("OPENCODE_API_KEY") 
+        self.base_url = os.getenv("OPENCODE_BASE_URL")
+        self.modelo_ia = os.getenv("OPENCODE_MODEL")
+
+        if not self.api_key:
+            messagebox.showerror(
+                "Error de Configuración", 
+                "No se encontró la API Key en el archivo .env.\n\n"
+                "Verifica que:\n"
+                "1. Tu archivo se llame exactamente '.env'\n"
+                "2. La variable se llame 'OPENCODE_API_KEY'\n"
+                "3. El archivo .env esté en la misma carpeta que este script."
+            )
         # ─── Ventana principal ────────────────────────────
         self.title("Automatizador de Defectos")
         self.geometry("1000x550")
@@ -265,16 +288,15 @@ class AutomatizadorApp(ctk.CTk):
         # ── Texto por defecto ─────────────────────────────
         self._insertar_texto_inicial_reporte()
 
-    def _insertar_texto_inicial_reporte(self):
-        """Inserta el mensaje placeholder en el reporte (solo lectura)."""
+    def _insertar_texto_inicial_reporte(self, texto="Aquí se mostrará el reporte generado...", color=COLOR_PLACEHOLDER):
+        """Inserta texto informativo en el reporte de forma segura."""
         self.salida_texto.configure(state="normal")
         self.salida_texto.delete("0.0", "end")
-        self.salida_texto.insert(
-            "0.0",
-            "Aquí se mostrará el reporte generado...",
-        )
-        self.salida_texto.configure(text_color=COLOR_PLACEHOLDER)
+        self.salida_texto.insert("0.0", texto)
+        self.salida_texto.configure(text_color=color)
         self.salida_texto.configure(state="disabled")
+    # self.salida_texto.configure(text_color=COLOR_PLACEHOLDER)
+    # self.salida_texto.configure(state="disabled")
 
     # ─────────────────────────────────────────────────────────
     # EVENTOS
@@ -313,20 +335,68 @@ class AutomatizadorApp(ctk.CTk):
     # MÉTODOS DE ACCIÓN (pendientes de implementar)
     # ─────────────────────────────────────────────────────────
     def generar_reporte(self):
-        """Genera un reporte de defecto usando IA.
+        if self._placeholder_activo or not self.entrada_texto.get("0.0", "end").strip():
+            messagebox.showwarning("Advertencia", "Por favor, escribe una descripción del defecto antes de generar.")
+            return
 
-        TODO: Implementar lógica de conexión con la API de IA
-        para analizar el defecto ingresado y poblar salida_texto.
-        """
-        pass
+        descripcion_usuario = self.entrada_texto.get("0.0", "end").strip()
+
+    # Cambiar estado visual a "Cargando..."
+        self._insertar_texto_inicial_reporte("🤖 Analizando y generando reporte profesional... Por favor espera.", COLOR_CIAN)
+        self.boton_generar.configure(state="disabled", text="⏳ Procesando...")
+        self.update() # Forzar refresco de la interfaz gráfica
+
+        try:
+            # Inicializar el cliente API
+            client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+
+            # Llamada al modelo de lenguaje
+            response = client.chat.completions.create(
+                model="deepseek-v4-flash", # Asegúrate de que el ID del modelo coincida con tu proveedor
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "Eres un QA Engineer experto. Transforma la descripción informal de un defecto en un reporte técnico formal de bugs. Usa Markdown. Incluye: Título claro, Severidad sugerida, Pasos para reproducir, Comportamiento esperado y Comportamiento actual."
+                    },
+                    {"role": "user", "content": descripcion_usuario}
+                ],
+                temperature=0.3,
+                max_tokens=1500
+            )
+
+            reporte_generado = response.choices[0].message.content
+
+            # Insertar resultado en el Textbox derecho
+            self.salida_texto.configure(state="normal")
+            self.salida_texto.delete("0.0", "end")
+            self.salida_texto.insert("0.0", reporte_generado)
+            self.salida_texto.configure(text_color=COLOR_TEXTO)
+            self.salida_texto.configure(state="disabled")
+
+        except Exception as e:
+            # En caso de error de conexión o API Key inválida
+            self._insertar_texto_inicial_reporte("❌ Error al generar el reporte.", "#ff4a4a")
+            messagebox.showerror("Error de API", f"No se pudo conectar con la IA:\n{str(e)}")
+        
+        finally:
+            # Restaurar el botón original
+            self.boton_generar.configure(state="normal", text="🤖  Generar Reporte")
 
     def copiar_reporte(self):
-        """Copia el contenido del reporte al portapapeles.
+        """Copia el contenido del reporte al portapapeles."""
+        texto_a_copiar = self.salida_texto.get("0.0", "end").strip()
+        
+        # Evitar copiar el texto por defecto
+        if "Aquí se mostrará" in texto_a_copiar or "Analizando y generando" in texto_a_copiar or not texto_a_copiar:
+            messagebox.showwarning("Copiar", "No hay un reporte válido generado para copiar.")
+            return
 
-        TODO: Implementar lógica para copiar el texto al
-        portapapeles del sistema.
-        """
-        pass
+        # Lógica nativa de Tkinter para portapapeles
+        self.clipboard_clear()
+        self.clipboard_append(texto_a_copiar)
+        self.update() # Mantiene el contenido en el portapapeles después de cerrar
+        
+        messagebox.showinfo("¡Éxito!", "Reporte copiado al portapapeles correctamente.")
 
 
 # ─────────────────────────────────────────────────────────
