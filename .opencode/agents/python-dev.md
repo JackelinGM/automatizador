@@ -35,7 +35,7 @@ automatizador/
 ├── .opencode/          # Configuración de opencode
 ├── automatizador.py    # Aplicación principal
 ├── requirements.txt    # Dependencias
-└── AGENTS.md          # Instrucciones del proyecto
+└── README.md           # Documentación del proyecto
 ```
 
 ## Al modificar código
@@ -49,8 +49,23 @@ automatizador/
 La aplicación debe:
 1. Recibir defectos por entrada manual
 2. Analizarlos con IA
-3. Generar reportes con estructura:
-   - Descripción
-   - Pasos para reproducir
-   - Resultado actual
-   - Resultado esperado
+3. Generar reportes con la siguiente estructura:
+
+   - **Descripción**: Contexto general del problema identificado
+   - **Pasos para reproducir**: Secuencia detallada que permita reproducir el defecto
+   - **Resultado actual**: Comportamiento observado durante la prueba
+   - **Resultado esperado**: Comportamiento correcto esperado según la funcionalidad
+
+## Comandos útiles
+```bash
+# Ejecutar la aplicación
+python automatizador.py
+
+# Instalar dependencias
+pip install -r requirements.txt
+
+## Próximos pasos
+- [ ] Integrar API de IA para análisis de defectos
+- [ ] Agregar funcionalidad de guardar/cargar defectos
+- [ ] Implementar exportación de reportes (PDF, Word)
+- [ ] Agregar validación de campos obligatorios
