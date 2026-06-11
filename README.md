@@ -1,48 +1,97 @@
-# Mini Reporte - Context Engineering y AGENTS.md
+# Automatizador de Defectos
 
-## Medición de contexto
+Aplicación de escritorio para generar reportes de defectos de software con asistencia de inteligencia artificial.
 
-No se realizó la medición inicial mediante `/context`, por lo que no fue posible comparar cuantitativamente el consumo de contexto antes y después de la poda. Como aprendizaje, se identificó la importancia de realizar esta medición desde el inicio para contar con evidencia objetiva del impacto de los cambios realizados.
+## Características
 
----
+- **Interfaz moderna** con CustomTkinter (tema oscuro, diseño responsive)
+- **Análisis con IA** mediante OpenCode API
+- **Reportes estructurados** con título, severidad, pasos para reproducir, resultado actual y esperado
+- **Contador de caracteres** en tiempo real
+- **Nuevo defecto** con confirmación para limpiar y empezar otro reporte
+- **Control SSL** para entornos corporativos
 
-## Tres decisiones de poda
+## Requisitos
 
-### Decisión 1: Eliminación de código hardcodeado
+- Python 3.10+
+- pip (gestor de paquetes de Python)
 
-El proyecto inicialmente generaba defectos mediante respuestas y estructuras definidas directamente en el código. Se eliminó esta dependencia para permitir una generación más dinámica mediante el agente.
+## Instalación
 
-### Decisión 2: Reducción de información redundante
+```bash
+git clone <url-del-repositorio>
+cd automatizador
+pip install -r requirements.txt
+```
 
-Se retiraron instrucciones y descripciones que podían inferirse directamente desde el código fuente, reduciendo ruido dentro del contexto.
+## Configuración
 
-### Decisión 3: Priorización de reglas críticas
+Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
-Se mantuvieron únicamente las reglas necesarias para la generación de defectos, evitando agregar documentación extensa o información de bajo valor para el agente.
+```ini
+OPENCODE_API_KEY=tu_api_key
+OPENCODE_BASE_URL=https://opencode.ai/zen/go/v1
+OPENCODE_MODEL=deepseek-v4-flash
+# MAX_TOKENS=3000          # Opcional: tokens máximos de la respuesta (default: 3000)
 
----
+# Opcional: deshabilitar verificación SSL (entornos corporativos)
+# SSL_VERIFY=false
+```
 
-## Gotcha identificado
+## Uso
 
-Durante las pruebas, el agente generaba una respuesta, pero no devolvía la estructura esperada para el defecto.
+```bash
+python automatizador.py
+```
 
-### Causa
+1. Describe el defecto en la caja de texto izquierda
+2. Haz clic en **"Generar Reporte"**
+3. El reporte estructurado aparecerá en el panel derecho
+4. Usa **"Nuevo defecto"** para limpiar y empezar otro reporte
 
-La configuración de los token´s era minima se aumento a 4000 
+## Estructura del proyecto
 
-### Error evitado
+```
+automatizador/
+├── .env                  # Variables de entorno (API key, modelo, SSL)
+├── .opencode/            # Configuración de OpenCode (no modificar)
+├── requirements.txt      # Dependencias del proyecto
+├── README.md             # Este archivo
+│
+├── automatizador.py      # Punto de entrada de la aplicación
+├── config.py             # Constantes, colores y carga de .env
+├── app.py                # Interfaz gráfica (CustomTkinter)
+│
+├── ia/                   # Lógica de inteligencia artificial
+│   ├── __init__.py
+│   └── cliente.py        # Conexión con la API y prompt del sistema
+│
+└── utils/                # Utilidades varias
+    └── __init__.py
+```
 
-Evita generar defectos incompletos o sin formato estándar, dificultando su posterior registro y seguimiento.
+## Arquitectura
 
----
+```
+automatizador.py  →  app.py  →  ia/cliente.py  →  OpenAI API
+                    (UI)        (lógica pura)     (externo)
+                        ↕
+                    config.py
+                    (constantes + .env)
+```
 
-## Reflexión
+- `app.py` importa la lógica, no al revés
+- `ia/cliente.py` no depende de Tkinter
+- `config.py` centraliza colores y configuración
 
-Inicialmente, el proyecto de automatización de defectos estaba construido únicamente con código hardcodeado y no contaba con un agente de IA. La generación de defectos se realizaba mediante plantillas fijas definidas directamente en el código.
+## Tecnologías
 
-Durante el ejercicio se identificó que un agente aporta valor cuando debe interpretar descripciones libres, generar información estructurada y facilitar una futura integración con Jira.
+- Python 3.x
+- CustomTkinter (GUI)
+- OpenCode API / OpenAI (IA)
+- httpx (cliente HTTP con control SSL)
 
-También se identificó la necesidad de utilizar prompts más específicos y robustos para obtener resultados consistentes, así como la importancia de medir el contexto desde el inicio para evaluar objetivamente las mejoras realizadas.
+## Próximos pasos
 
----
-
+- [ ] Guardar/cargar defectos desde archivo
+- [ ] Validación de campos obligatorios
