@@ -8,11 +8,11 @@
   },
   "agent": {
     "python-dev": {
-      "description": "Agente especializado en desarrollo Python y Tkinter",
+      "description": "Agente especializado en desarrollo Python y CustomTkinter para automatizador de defectos",
       "mode": "primary",
       "model": "opencode/mimo-v2-free",
       "temperature": 0.3,
-      "prompt": "{file:.opencode/agents/python-dev.md}",
+      "prompt": "{file:agents/python-dev.md}",
       "permission": {
         "edit": "allow",
         "bash": "ask",
